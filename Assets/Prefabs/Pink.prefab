@@ -120,10 +120,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 639e1febd65b3e44e8111ebee473a147, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 5
+  boundary: {fileID: 6385416761981837544, guid: 3648b5bca3ae2284fb53d3bc8ad8eca4, type: 3}
   column: 0
   row: 0
-  targetX: 0
-  targetY: 0
   swipeAngle: 0
 --- !u!114 &3915484114416057307
 MonoBehaviour:

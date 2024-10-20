@@ -7,6 +7,7 @@ public class GearPart : MonoBehaviour
 {
 
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private GameObject boundary;
 
     private GridSetup grid;
     private GridItem gridItem;
@@ -33,11 +34,15 @@ public class GearPart : MonoBehaviour
         column = gridItem.col;
         row = gridItem.row;
         assemblyLine.Clear();
+       
+        
+
     }
 
 
     public void MovePieces()
     {
+       
         // right swipe
         if (swipeAngle > -45 && swipeAngle <= 45 && column < grid.width - 1)
         {
@@ -46,6 +51,7 @@ public class GearPart : MonoBehaviour
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
 
             }
+            StartCoroutine(StartMovingPieces(Vector2.right));
         }
 
         // Up swipe
@@ -56,6 +62,7 @@ public class GearPart : MonoBehaviour
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
 
             }
+            StartCoroutine(StartMovingPieces(Vector2.up));
         }
 
         // left swipe
@@ -67,6 +74,7 @@ public class GearPart : MonoBehaviour
                 
 
             }
+            StartCoroutine(StartMovingPieces(Vector2.left));
         }
 
         // Down swipe
@@ -77,41 +85,81 @@ public class GearPart : MonoBehaviour
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
                
             }
+            StartCoroutine(StartMovingPieces(Vector2.down));
 
         }
+        
 
-
-        StartMoving();
         assemblyLine.Clear();
+
     }
 
 
-    IEnumerator StartMovingPieces()
+    IEnumerator StartMovingPieces(Vector2 swipeDirection)
     {
-        yield return new Null();
-    }
+        
+        // Time taken to move one piece to the next position
+        float moveDuration = 1f;
+        float elapsedTime = 0f;
+        Renderer renderer = boundary.GetComponent<Renderer>();
+        Bounds bounds = renderer.bounds;
 
-    void StartMoving()
-    {
         GameObject last = assemblyLine[assemblyLine.Count - 1];
 
-        Vector3 lastPos = assemblyLine[assemblyLine.Count - 1].transform.position;
-        Quaternion lastRot = assemblyLine[assemblyLine.Count - 1].transform.rotation;
+      
+        Vector3 startPosition = last.transform.position;
+        Quaternion startRotation = last.transform.rotation;
 
-        // Shift all elements one step forward 
-        for (int i = 0; i < assemblyLine.Count - 1; i++)
-        {
-            assemblyLine[i].transform.position = assemblyLine[i + 1].transform.position;
-            assemblyLine[i].transform.rotation = assemblyLine[i + 1].transform.rotation;
-        }
-
-        // Move the last element to the first element's position
-        assemblyLine[0].transform.position = lastPos;
-        assemblyLine[0].transform.rotation = lastRot;
+        
+        Vector3 targetPosition = assemblyLine[0].transform.position;
+        Quaternion targetRotation = assemblyLine[0].transform.rotation;
 
         assemblyLine.RemoveAt(assemblyLine.Count - 1);
         assemblyLine.Insert(0, last);
+
+        if(swipeDirection == Vector2.up)
+        {
+            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.max.y);
+        }
+
+        else if(swipeDirection == Vector2.down)
+        {
+            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.min.y);
+            
+        }
+
+        else if(swipeDirection == Vector2.left)
+        {
+            targetPosition = new Vector2(bounds.min.x, assemblyLine[0].transform.position.y);
+        }
+
+        else if(swipeDirection == Vector2.right)
+        {
+            targetPosition = new Vector2(bounds.max.x, assemblyLine[0].transform.position.y);
+        }
+
+        while (elapsedTime < moveDuration)
+        {
+            if (last.transform.position == bounds.max)
+            {
+                targetPosition = 
+            }
+            elapsedTime += Time.deltaTime;
+
+            
+            last.transform.position = Vector2.Lerp(startPosition, targetPosition, elapsedTime / moveDuration);
+            last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
+
+            
+
+            yield return null; 
+        }
+
+       
+        
     }
+
+
 
 
 
@@ -120,8 +168,6 @@ public class GearPart : MonoBehaviour
     private void OnMouseDown()
     {
         firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-       
-
     }
 
     private void OnMouseUp()
