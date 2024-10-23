@@ -42,7 +42,7 @@ public class GearPart : MonoBehaviour
 
     public void MovePieces()
     {
-       
+
         // right swipe
         if (swipeAngle > -45 && swipeAngle <= 45 && column < grid.width - 1)
         {
@@ -71,7 +71,7 @@ public class GearPart : MonoBehaviour
             for (int i = grid.width - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
-                
+
 
             }
             StartCoroutine(StartMovingPieces(Vector2.left));
@@ -83,21 +83,30 @@ public class GearPart : MonoBehaviour
             for (int i = grid.height - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
-               
+
             }
             StartCoroutine(StartMovingPieces(Vector2.down));
 
         }
-        
 
-        assemblyLine.Clear();
+        PrintGears();
+
+       // assemblyLine.Clear();
 
     }
 
+    private void PrintGears()
+    {
+        for (int j = 0; j < assemblyLine.Count; j++)
+        {
+            Debug.Log(assemblyLine[j]);
+        }
+    }
 
     IEnumerator StartMovingPieces(Vector2 swipeDirection)
     {
-        
+       
+
         // Time taken to move one piece to the next position
         float moveDuration = 1f;
         float elapsedTime = 0f;
@@ -106,64 +115,102 @@ public class GearPart : MonoBehaviour
 
         GameObject last = assemblyLine[assemblyLine.Count - 1];
 
-      
+
         Vector3 startPosition = last.transform.position;
         Quaternion startRotation = last.transform.rotation;
 
-        
-        Vector3 targetPosition = assemblyLine[0].transform.position;
+
+        Vector2 targetPosition = Vector2.zero ;
         Quaternion targetRotation = assemblyLine[0].transform.rotation;
 
-        assemblyLine.RemoveAt(assemblyLine.Count - 1);
-        assemblyLine.Insert(0, last);
+        
 
-        if(swipeDirection == Vector2.up)
-        {
-            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.max.y);
-        }
-
-        else if(swipeDirection == Vector2.down)
+        if (swipeDirection == Vector2.up)
         {
             targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.min.y);
-            
         }
 
-        else if(swipeDirection == Vector2.left)
+        else if (swipeDirection == Vector2.down)
+        {
+            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.max.y);
+
+        }
+
+        else if (swipeDirection == Vector2.left)
         {
             targetPosition = new Vector2(bounds.min.x, assemblyLine[0].transform.position.y);
         }
 
-        else if(swipeDirection == Vector2.right)
+        else if (swipeDirection == Vector2.right)
         {
             targetPosition = new Vector2(bounds.max.x, assemblyLine[0].transform.position.y);
         }
 
+        assemblyLine.RemoveAt(assemblyLine.Count - 1);
+        assemblyLine.Insert(0, last);
+
         while (elapsedTime < moveDuration)
         {
-            if (last.transform.position == bounds.max)
-            {
-                targetPosition = 
-            }
+
+
             elapsedTime += Time.deltaTime;
 
-            
+
             last.transform.position = Vector2.Lerp(startPosition, targetPosition, elapsedTime / moveDuration);
             last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
+            SetNewPositionLastElement(bounds, last);
 
-            
+            if(Vector2.Distance(last.transform.position ,new Vector2(assemblyLine[1].transform.position.x, assemblyLine[1].transform.position.y)) < 1f)
+            {
+                elapsedTime = 0f;
+                startPosition = last.transform.position;
+                targetPosition = assemblyLine[1].transform.position;
+                targetRotation = assemblyLine[1].transform.rotation;
+               
+            }
 
-            yield return null; 
+          
+            yield return null;
         }
 
-       
-        
+        while(elapsedTime < 1f)
+        {
+            elapsedTime += Time.deltaTime;
+            
+            last.transform.position = Vector2.Lerp(startPosition, targetPosition, 1f);
+            last.transform.rotation = Quaternion.Lerp(startRotation, assemblyLine[0].transform.rotation, 1f);
+            last.transform.rotation = assemblyLine[0].transform.rotation;
+
+            yield return null;
+        }
+
+
     }
 
+    private static void SetNewPositionLastElement(Bounds bounds, GameObject last)
+    {
+        if (last.transform.position.x == bounds.max.x)
+        {
+            
+            last.transform.position = new Vector2(bounds.min.x, last.transform.position.y);
+            
+        }
 
+        else if (last.transform.position.x == bounds.min.x)
+        {
+            last.transform.position = new Vector2(bounds.max.x, last.transform.position.y);
+        }
 
+        else if (last.transform.position.y == bounds.max.y)
+        {
+            last.transform.position = new Vector2(bounds.min.y, last.transform.position.y);
+        }
 
-
-
+        else if (last.transform.position.x == bounds.min.y)
+        {
+            last.transform.position = new Vector2(bounds.max.y, last.transform.position.y);
+        }
+    }
 
     private void OnMouseDown()
     {

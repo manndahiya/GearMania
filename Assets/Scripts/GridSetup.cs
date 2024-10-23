@@ -36,13 +36,7 @@ public class GridSetup : MonoBehaviour
         
 
     }
-    public Vector3 GetWorldPosition(int col, int row)
-    {
-        // Assuming your grid's center is at (0, 0), adjust if it's offset
-        float x = col * 1f;
-        float y = row * 1f;
-        return new Vector3(x, y, 0); // Z position is usually 0 for 2D games
-    }
+ 
 
     private void AdjustPositionAndScale()
     {
