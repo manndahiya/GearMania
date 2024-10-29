@@ -108,7 +108,7 @@ public class GearPart : MonoBehaviour
        
 
         // Time taken to move one piece to the next position
-        float moveDuration = 1f;
+        float moveDuration = 0.5f;
         float elapsedTime = 0f;
         Renderer renderer = boundary.GetComponent<Renderer>();
         Bounds bounds = renderer.bounds;
@@ -127,12 +127,12 @@ public class GearPart : MonoBehaviour
 
         if (swipeDirection == Vector2.up)
         {
-            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.min.y);
+            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.max.y);
         }
 
         else if (swipeDirection == Vector2.down)
         {
-            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.max.y);
+            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.min.y);
 
         }
 
@@ -164,6 +164,7 @@ public class GearPart : MonoBehaviour
             {
                 elapsedTime = 0f;
                 startPosition = last.transform.position;
+                startRotation = last.transform.rotation;
                 targetPosition = assemblyLine[1].transform.position;
                 targetRotation = assemblyLine[1].transform.rotation;
                
@@ -173,13 +174,13 @@ public class GearPart : MonoBehaviour
             yield return null;
         }
 
-        while(elapsedTime < 1f)
+        while(elapsedTime < 0.5f)
         {
             elapsedTime += Time.deltaTime;
             
             last.transform.position = Vector2.Lerp(startPosition, targetPosition, 1f);
-            last.transform.rotation = Quaternion.Lerp(startRotation, assemblyLine[0].transform.rotation, 1f);
-            last.transform.rotation = assemblyLine[0].transform.rotation;
+            last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, 1f);
+            last.transform.rotation = targetRotation;
 
             yield return null;
         }
@@ -203,12 +204,12 @@ public class GearPart : MonoBehaviour
 
         else if (last.transform.position.y == bounds.max.y)
         {
-            last.transform.position = new Vector2(bounds.min.y, last.transform.position.y);
+            last.transform.position = new Vector2(last.transform.position.x, bounds.min.y);
         }
 
         else if (last.transform.position.x == bounds.min.y)
         {
-            last.transform.position = new Vector2(bounds.max.y, last.transform.position.y);
+            last.transform.position = new Vector2(last.transform.position.x, bounds.max.y);
         }
     }
 
