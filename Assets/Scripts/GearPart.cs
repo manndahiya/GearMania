@@ -184,16 +184,14 @@ public class GearPart : MonoBehaviour
             last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
             SetNewPositionLastElement(bounds, last);
 
-           
             if (Vector2.Distance(last.transform.position, new Vector2(assemblyLine[0].transform.position.x, assemblyLine[0].transform.position.y)) < 1f)
             {
-                //elapsedTime = 0f;
-                startPosition = last.transform.position;
-                startRotation = last.transform.rotation;
+                Debug.Log("Close");
                 targetPosition = assemblyLine[0].transform.position;
                 targetRotation = assemblyLine[0].transform.rotation;
 
             }
+          
             for (int y = 0; y < assemblyLine.Count - 1; y++)
             {
                 assemblyLine[y].transform.position = Vector2.Lerp(startPositions[y], targetPositions[y], elapsedTime / moveDuration);
@@ -201,26 +199,14 @@ public class GearPart : MonoBehaviour
           
             }
 
+           
+            Debug.Log($"Target Position: {targetPosition}");
+            Debug.Log($"First Element Position: {assemblyLine[0].transform.position}");
 
             yield return null;
         }
 
- 
-
-        //second loop to make it go towards another item's pos
-        while (elapsedTime < moveDuration)
-        {
-            elapsedTime += Time.deltaTime;
-         
-            last.transform.position = Vector2.Lerp(startPosition, targetPosition, 1f);
-            last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, 1f);
-            last.transform.rotation = targetRotation;
-
-            yield return null;
-        }
-
-        Debug.Log($"Target Position: {targetPosition}");
-        Debug.Log($"First Element Position: {assemblyLine[0].transform.position}");
+       
 
         RotateList(last);
     }
@@ -240,6 +226,7 @@ public class GearPart : MonoBehaviour
 
     private static void SetNewPositionLastElement(Bounds bounds, GameObject last)
     {
+        
        
         Vector3 position = last.transform.position;
 
