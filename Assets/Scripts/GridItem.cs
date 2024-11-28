@@ -28,4 +28,12 @@ public class GridItem : MonoBehaviour
         }
     }
 
+    public void UpdateGridPosition(int newCol, int newRow)
+    {
+        col = newCol;
+        row = newRow;
+        gameObject.name = $"({col}, {row})";
+    }
+
+
 }

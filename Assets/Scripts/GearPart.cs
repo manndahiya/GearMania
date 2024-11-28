@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using NUnit.Framework;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -23,8 +24,8 @@ public class GearPart : MonoBehaviour
     private Vector2 tempPosition;
 
     public float swipeAngle = 0;
-    
 
+    private bool isMoving = false;
 
     List<GameObject> assemblyLine = new List<GameObject>();
 
@@ -42,10 +43,11 @@ public class GearPart : MonoBehaviour
 
     public void MovePieces()
     {
-        assemblyLine.Clear();
+        
         // right swipe
         if (swipeAngle > -45 && swipeAngle <= 45 && column < grid.width - 1)
         {
+            assemblyLine.Clear();
             for (int i = 0; i < grid.width; i++)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
@@ -57,6 +59,7 @@ public class GearPart : MonoBehaviour
         // Up swipe
         else if (swipeAngle > 45 && swipeAngle <= 135 && row < grid.height - 1)
         {
+            assemblyLine.Clear();
             for (int i = 0; i < grid.height; i++)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
@@ -68,6 +71,7 @@ public class GearPart : MonoBehaviour
         // left swipe
         else if ((swipeAngle > 135 || swipeAngle <= -135) && column > 0)
         {
+            assemblyLine.Clear();
             for (int i = grid.width - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
@@ -80,9 +84,11 @@ public class GearPart : MonoBehaviour
         // Down swipe
         else if (swipeAngle < -45 && swipeAngle >= -135 && row > 0)
         {
+            assemblyLine.Clear();
             for (int i = grid.height - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
+                
 
             }
             StartCoroutine(StartMovingPieces(Vector2.down));
@@ -103,7 +109,7 @@ public class GearPart : MonoBehaviour
 
     IEnumerator StartMovingPieces(Vector2 swipeDirection)
     {
-        
+       isMoving = true;
 
         // Time taken to move one piece to the next position
         float moveDuration = 0.5f;
@@ -195,17 +201,73 @@ public class GearPart : MonoBehaviour
           
             }
 
-           
-            Debug.Log($"Target Position: {targetPosition}");
-            Debug.Log($"Last Element POS: {last.transform.position}");
+
 
             yield return null;
         }
 
-       
 
-       
+        //Update new gear positions to original list
+        UpdateGrid(swipeDirection);
+        SyncGrid();
+        isMoving = false;
+
     }
+
+    void SyncGrid()
+    {
+        for (int x = 0; x < grid.width; x++)
+        {
+            for (int y = 0; y < grid.height; y++)
+            {
+                if (grid.allGearParts[x, y] != null)
+                {
+                    var gridItem = grid.allGearParts[x, y].GetComponent<GridItem>();
+                    gridItem.col = x;
+                    gridItem.row = y;
+                    grid.allGearParts[x, y].name = $"({x}, {y})"; // Update name
+                }
+            }
+        }
+    }
+
+    private void UpdateGrid(Vector2 swipeDirection)
+    {
+        
+        foreach (GameObject gearPart in assemblyLine)
+        {
+            GridItem gridItem = gearPart.GetComponent<GridItem>();
+
+            // Current position
+            int currentCol = gridItem.col;
+            int currentRow = gridItem.row;
+
+            int newCol = currentCol;
+            int newRow = currentRow;
+
+            if (swipeDirection == Vector2.right)
+            {
+                newCol = (currentCol + 1) % grid.width; // Wrap around horizontally
+            }
+            else if (swipeDirection == Vector2.left)
+            {
+                newCol = (currentCol - 1 + grid.width) % grid.width; // Wrap around horizontally
+            }
+            else if (swipeDirection == Vector2.up)
+            {
+                newRow = (currentRow + 1) % grid.height; // Wrap around vertically
+            }
+            else if (swipeDirection == Vector2.down)
+            {
+                newRow = (currentRow - 1 + grid.height) % grid.height; // Wrap around vertically
+            }
+
+
+            gridItem.UpdateGridPosition(newCol, newRow);
+            grid.allGearParts[gridItem.col, gridItem.row] = gearPart;
+        }
+    }
+
 
 
     private static void SetNewPositionLastElement(Bounds bounds, GameObject last)
@@ -228,17 +290,20 @@ public class GearPart : MonoBehaviour
         if (value == min) return max;
         return value;
     }
-   
+
 
     private void OnMouseDown()
     {
+        if (isMoving) return; // Ignore input while moving
+
         firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
     private void OnMouseUp()
     {
+        if (isMoving) return; // Ignore input while moving
+
         finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-       
         CalculateAngle();
     }
 
