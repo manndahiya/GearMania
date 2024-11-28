@@ -36,15 +36,13 @@ public class GearPart : MonoBehaviour
         column = gridItem.col;
         row = gridItem.row;
         assemblyLine.Clear();
-       
-        
 
     }
 
 
     public void MovePieces()
     {
-
+        assemblyLine.Clear();
         // right swipe
         if (swipeAngle > -45 && swipeAngle <= 45 && column < grid.width - 1)
         {
@@ -91,9 +89,7 @@ public class GearPart : MonoBehaviour
 
         }
 
-       // PrintGears();
-
-       // assemblyLine.Clear();
+     
 
     }
 
@@ -123,6 +119,7 @@ public class GearPart : MonoBehaviour
 
 
         Vector2 targetPosition = Vector2.zero;
+        Vector2 firstItemPos = assemblyLine[0].transform.position; 
         Quaternion targetRotation = assemblyLine[0].transform.rotation;
 
         List<Vector2> startPositions = new List<Vector2>();
@@ -168,10 +165,7 @@ public class GearPart : MonoBehaviour
 
         }
 
-        
-
-
-
+       
         //initial while loop to make gear move to end of screen
         while (elapsedTime < moveDuration)
         {
@@ -184,13 +178,15 @@ public class GearPart : MonoBehaviour
             last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
             SetNewPositionLastElement(bounds, last);
 
-            if (Vector2.Distance(last.transform.position, new Vector2(assemblyLine[0].transform.position.x, assemblyLine[0].transform.position.y)) < 1f)
+            if (Vector2.Distance(last.transform.position, new Vector2(firstItemPos.x, firstItemPos.y)) < 1f)
             {
-                Debug.Log("Close");
-                targetPosition = assemblyLine[0].transform.position;
-                targetRotation = assemblyLine[0].transform.rotation;
+                
+                last.transform.position = Vector2.Lerp(startPosition, firstItemPos, elapsedTime / moveDuration);
+                last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
 
             }
+
+        
           
             for (int y = 0; y < assemblyLine.Count - 1; y++)
             {
@@ -201,28 +197,16 @@ public class GearPart : MonoBehaviour
 
            
             Debug.Log($"Target Position: {targetPosition}");
-            Debug.Log($"First Element Position: {assemblyLine[0].transform.position}");
+            Debug.Log($"Last Element POS: {last.transform.position}");
 
             yield return null;
         }
 
        
 
-        RotateList(last);
+       
     }
 
-    private void RotateList(GameObject last)
-    {
-        for (int i = assemblyLine.Count - 1; i > 0; i--)
-        {
-
-            assemblyLine[i] = assemblyLine[i - 1];
-
-        }
-
-        assemblyLine.RemoveAt(assemblyLine.Count - 1);
-        assemblyLine.Insert(0, last);
-    }
 
     private static void SetNewPositionLastElement(Bounds bounds, GameObject last)
     {
@@ -244,12 +228,6 @@ public class GearPart : MonoBehaviour
         if (value == min) return max;
         return value;
     }
-
-    private static float Mod(float a , float b)
-    {
-        return a - b * Mathf.Floor(a / b);
-    }
-
    
 
     private void OnMouseDown()
