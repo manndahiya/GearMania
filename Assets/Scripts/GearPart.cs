@@ -10,6 +10,7 @@ public class GearPart : MonoBehaviour
 
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private GameObject boundary;
+    [SerializeField] private float swipeThreshold = 0.5f; // Minimum distance for a swipe
 
     private GridSetup grid;
     private GridItem gridItem;
@@ -26,6 +27,7 @@ public class GearPart : MonoBehaviour
     public float swipeAngle = 0;
 
     private bool isMoving = false;
+    private bool canReceiveInput = true;
 
     List<GameObject> assemblyLine = new List<GameObject>();
 
@@ -43,7 +45,8 @@ public class GearPart : MonoBehaviour
 
     public void MovePieces()
     {
-        
+        if (isMoving) return;
+
         // right swipe
         if (swipeAngle > -45 && swipeAngle <= 45 && column < grid.width - 1)
         {
@@ -109,7 +112,10 @@ public class GearPart : MonoBehaviour
 
     IEnumerator StartMovingPieces(Vector2 swipeDirection)
     {
-       isMoving = true;
+        if (isMoving) yield break;
+
+
+        isMoving = true;
 
         // Time taken to move one piece to the next position
         float moveDuration = 0.5f;
@@ -294,23 +300,41 @@ public class GearPart : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (isMoving) return; // Ignore input while moving
+        if (!canReceiveInput) return; // Ignore input while moving
 
         firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
     private void OnMouseUp()
     {
-        if (isMoving) return; // Ignore input while moving
+        if (!canReceiveInput) return; // Ignore input while moving
 
         finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         CalculateAngle();
+        StartCoroutine(BlockInputForDuration(1f));
     }
 
     void CalculateAngle()
     {
-        swipeAngle = Mathf.Atan2(finalTouchPosition.y - firstTouchPosition.y, finalTouchPosition.x - firstTouchPosition.x) * 180 / Mathf.PI;
-        
+        float swipeDistance = Vector2.Distance(finalTouchPosition, firstTouchPosition);
+
+        if (swipeDistance < swipeThreshold)
+        {
+            return; // Treat this as a click, not a swipe
+        }
+
+        // If the swipe is valid, calculate the angle
+        swipeAngle = Mathf.Atan2(finalTouchPosition.y - firstTouchPosition.y,
+                                 finalTouchPosition.x - firstTouchPosition.x) * 180 / Mathf.PI;
+
         MovePieces();
     }
+
+    IEnumerator BlockInputForDuration(float duration)
+    {
+        canReceiveInput = false;
+        yield return new WaitForSeconds(duration);
+        canReceiveInput = true;
+    }
+
 }
