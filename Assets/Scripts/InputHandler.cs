@@ -33,22 +33,15 @@ public class InputHandler : MonoBehaviour
     }
     private void OnMouseDown()
     {
-   
         // Convert the mouse position to world coordinates
-        firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        
+        firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
     }
 
     private void OnMouseUp()
     {
-    
-
         // Convert the final mouse position to world coordinates
         finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-      
-
-        CalculateAngle();
-        
+        CalculateAngle();  
     }
 
     void CalculateAngle()
@@ -74,12 +67,10 @@ public class InputHandler : MonoBehaviour
     private void OnEnable()
     {
         inputActions.Enable();
-    
     }
 
     private void OnDisable()
     {
-       
         inputActions.Disable();
     }
 

@@ -15,14 +15,11 @@ public class GearPart : MonoBehaviour
     private GridSetup grid;
     private GridItem gridItem;
 
-    private GameObject otherGearPart;
-
     public int column;
     public int row;
 
     private Vector2 firstTouchPosition;
     private Vector2 finalTouchPosition;
-    private Vector2 tempPosition;
 
     public float swipeAngle = 0;
 
@@ -54,8 +51,8 @@ public class GearPart : MonoBehaviour
             for (int i = 0; i < grid.width; i++)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
-
             }
+
             StartCoroutine(StartMovingPieces(Vector2.right));
         }
 
@@ -66,8 +63,8 @@ public class GearPart : MonoBehaviour
             for (int i = 0; i < grid.height; i++)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
-
             }
+
             StartCoroutine(StartMovingPieces(Vector2.up));
         }
 
@@ -78,9 +75,8 @@ public class GearPart : MonoBehaviour
             for (int i = grid.width - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
-
-
             }
+
             StartCoroutine(StartMovingPieces(Vector2.left));
         }
 
@@ -91,9 +87,8 @@ public class GearPart : MonoBehaviour
             for (int i = grid.height - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
-                
-
             }
+
             StartCoroutine(StartMovingPieces(Vector2.down));
 
         }
@@ -113,111 +108,76 @@ public class GearPart : MonoBehaviour
     IEnumerator StartMovingPieces(Vector2 swipeDirection)
     {
         if (isMoving) yield break;
-
-
         isMoving = true;
 
-        // Time taken to move one piece to the next position
         float moveDuration = 0.5f;
         float elapsedTime = 0f;
         Renderer renderer = boundary.GetComponent<Renderer>();
         Bounds bounds = renderer.bounds;
 
         GameObject last = assemblyLine[assemblyLine.Count - 1];
+        Vector3 lastStartPosition = last.transform.position;
+        Quaternion lastStartRotation = last.transform.rotation;
 
+        Vector2 firstItemPos = assemblyLine[0].transform.position;
+        Quaternion firstItemRotation = assemblyLine[0].transform.rotation;
 
-        Vector3 startPosition = last.transform.position;
-        Quaternion startRotation = last.transform.rotation;
+        Vector2 boundaryTarget = GetTargetPosition(swipeDirection, bounds, firstItemPos);
 
-
-        Vector2 targetPosition = Vector2.zero;
-        Vector2 firstItemPos = assemblyLine[0].transform.position; 
-        Quaternion targetRotation = assemblyLine[0].transform.rotation;
-
-        List<Vector2> startPositions = new List<Vector2>();
+        // Store starting positions and rotations for all gears
+        List<Vector3> startPositions = new List<Vector3>();
         List<Quaternion> startRotations = new List<Quaternion>();
-
-        List<Vector2> targetPositions = new List<Vector2>();
+        List<Vector3> targetPositions = new List<Vector3>();
         List<Quaternion> targetRotations = new List<Quaternion>();
 
-        if (swipeDirection == Vector2.up)
+        // Set up targets: each gear moves to the next gear's position, except the last one
+        for (int i = 0; i < assemblyLine.Count - 1; i++)
         {
-            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.max.y);
+            startPositions.Add(assemblyLine[i].transform.position);
+            startRotations.Add(assemblyLine[i].transform.rotation);
+            targetPositions.Add(assemblyLine[i + 1].transform.position);
+            targetRotations.Add(assemblyLine[i + 1].transform.rotation);
         }
+        // Last gear moves to boundary
+        startPositions.Add(lastStartPosition);
+        startRotations.Add(lastStartRotation);
+        targetPositions.Add(boundaryTarget);
+        targetRotations.Add(firstItemRotation); // Will teleport to first position, so use its rotation
 
-        else if (swipeDirection == Vector2.down)
-        {
-            targetPosition = new Vector2(assemblyLine[0].transform.position.x, bounds.min.y);
-
-        }
-
-        else if (swipeDirection == Vector2.left)
-        {
-            targetPosition = new Vector2(bounds.min.x, assemblyLine[0].transform.position.y);
-        }
-
-        else if (swipeDirection == Vector2.right)
-        {
-            targetPosition = new Vector2(bounds.max.x, assemblyLine[0].transform.position.y);
-        }
-
-        for (int x = 0; x < assemblyLine.Count - 1; x++)
-        {
-            startPositions.Add(assemblyLine[x].transform.position);
-            startRotations.Add(assemblyLine[x].transform.rotation);
-
-            targetPositions.Add(assemblyLine[x + 1].transform.position);
-            targetRotations.Add(assemblyLine[x + 1].transform.rotation);
-
-            if (x == assemblyLine.Count - 2)
-            {
-                targetPositions.Add(last.transform.position);
-                targetRotations.Add(last.transform.rotation);
-            }
-
-        }
-
-       
-        //initial while loop to make gear move to end of screen
+        // Animate all gears moving
         while (elapsedTime < moveDuration)
         {
-
-            
             elapsedTime += Time.deltaTime;
+            float t = elapsedTime / moveDuration;
 
-
-            last.transform.position = Vector2.Lerp(startPosition, targetPosition, elapsedTime / moveDuration);
-            last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
-            SetNewPositionLastElement(bounds, last);
-
-            if (Vector2.Distance(last.transform.position, new Vector2(firstItemPos.x, firstItemPos.y)) < 1f)
+            for (int i = 0; i < assemblyLine.Count; i++)
             {
-                
-                last.transform.position = Vector2.Lerp(startPosition, firstItemPos, elapsedTime / moveDuration);
-                last.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, elapsedTime / moveDuration);
-
+                assemblyLine[i].transform.position = Vector3.Lerp(startPositions[i], targetPositions[i], t);
+                assemblyLine[i].transform.rotation = Quaternion.Lerp(startRotations[i], targetRotations[i], t);
             }
-
-        
-          
-            for (int y = 0; y < assemblyLine.Count - 1; y++)
-            {
-                assemblyLine[y].transform.position = Vector2.Lerp(startPositions[y], targetPositions[y], elapsedTime / moveDuration);
-                assemblyLine[y].transform.rotation = Quaternion.Lerp(startRotations[y], targetRotations[y], elapsedTime / moveDuration);
-          
-            }
-
-
-
             yield return null;
         }
 
+        // Snap last gear to first position after reaching boundary
+        last.transform.position = firstItemPos;
+        last.transform.rotation = firstItemRotation;
 
-        //Update new gear positions to original list
+        // Update grid and sync
         UpdateGrid(swipeDirection);
         SyncGrid();
         isMoving = false;
+    }
 
+    private Vector2 GetTargetPosition(Vector2 swipeDirection, Bounds bounds, Vector2 firstItemPos)
+    {
+        if (swipeDirection == Vector2.up)
+            return new Vector2(firstItemPos.x, bounds.max.y);
+        else if (swipeDirection == Vector2.down)
+            return new Vector2(firstItemPos.x, bounds.min.y);
+        else if (swipeDirection == Vector2.left)
+            return new Vector2(bounds.min.x, firstItemPos.y);
+        else // right
+            return new Vector2(bounds.max.x, firstItemPos.y);
     }
 
     void SyncGrid()
@@ -239,7 +199,9 @@ public class GearPart : MonoBehaviour
 
     private void UpdateGrid(Vector2 swipeDirection)
     {
-        
+        // Temporary array to store new positions
+        GameObject[,] tempGrid = new GameObject[grid.width, grid.height];
+
         foreach (GameObject gearPart in assemblyLine)
         {
             GridItem gridItem = gearPart.GetComponent<GridItem>();
@@ -270,7 +232,17 @@ public class GearPart : MonoBehaviour
 
 
             gridItem.UpdateGridPosition(newCol, newRow);
-            grid.allGearParts[gridItem.col, gridItem.row] = gearPart;
+            tempGrid[newCol, newRow] = gearPart;
+        }
+
+        // Update the main grid
+        for (int x = 0; x < grid.width; x++)
+        {
+            for (int y = 0; y < grid.height; y++)
+            {
+                if (tempGrid[x, y] != null)
+                    grid.allGearParts[x, y] = tempGrid[x, y];
+            }
         }
     }
 
@@ -292,11 +264,10 @@ public class GearPart : MonoBehaviour
 
     private static float WrapAxis(float value, float min, float max)
     {
-        if (value == max) return min;
-        if (value == min) return max;
+        if (value >= max) return min;
+        if (value <= min) return max;
         return value;
     }
-
 
     private void OnMouseDown()
     {

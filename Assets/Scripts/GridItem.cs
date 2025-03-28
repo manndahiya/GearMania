@@ -10,11 +10,10 @@ public class GridItem : MonoBehaviour
 
 
     private void Start()
-    {
-       
+    { 
         string name = gameObject.name;
-       
         string pattern = @"\d+";
+
         MatchCollection matches = Regex.Matches(name, pattern);
         if (matches.Count > 0)
         {
@@ -23,8 +22,6 @@ public class GridItem : MonoBehaviour
 
             col = firstNumber;
             row = secondNumber;
-           
-
         }
     }
 
