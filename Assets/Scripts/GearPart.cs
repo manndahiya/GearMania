@@ -15,6 +15,8 @@ public class GearPart : MonoBehaviour
     private GridSetup grid;
     private GridItem gridItem;
 
+    private List<GameObject> assemblyLine = new List<GameObject>();
+
     public int column;
     public int row;
 
@@ -26,7 +28,7 @@ public class GearPart : MonoBehaviour
     private bool isMoving = false;
     private bool canReceiveInput = true;
 
-    List<GameObject> assemblyLine = new List<GameObject>();
+ 
 
     
     void Start()
@@ -39,15 +41,26 @@ public class GearPart : MonoBehaviour
 
     }
 
+    private void PrintGears()
+    {
+        for (int j = 0; j < assemblyLine.Count; j++)
+        {
+            Debug.Log(assemblyLine[j]);
+        }
+    }
 
     public void MovePieces()
     {
         if (isMoving) return;
 
+        Debug.Log("Trying to move");
+        assemblyLine.Clear();
+        
+
         // right swipe
         if (swipeAngle > -45 && swipeAngle <= 45 && column < grid.width - 1)
         {
-            assemblyLine.Clear();
+            
             for (int i = 0; i < grid.width; i++)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
@@ -59,7 +72,7 @@ public class GearPart : MonoBehaviour
         // Up swipe
         else if (swipeAngle > 45 && swipeAngle <= 135 && row < grid.height - 1)
         {
-            assemblyLine.Clear();
+            
             for (int i = 0; i < grid.height; i++)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
@@ -71,7 +84,7 @@ public class GearPart : MonoBehaviour
         // left swipe
         else if ((swipeAngle > 135 || swipeAngle <= -135) && column > 0)
         {
-            assemblyLine.Clear();
+            
             for (int i = grid.width - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[i, this.gameObject.GetComponent<GridItem>().row]);
@@ -83,7 +96,7 @@ public class GearPart : MonoBehaviour
         // Down swipe
         else if (swipeAngle < -45 && swipeAngle >= -135 && row > 0)
         {
-            assemblyLine.Clear();
+          
             for (int i = grid.height - 1; i >= 0; i--)
             {
                 assemblyLine.Add(grid.allGearParts[this.gameObject.GetComponent<GridItem>().col, i]);
@@ -97,18 +110,14 @@ public class GearPart : MonoBehaviour
 
     }
 
-    private void PrintGears()
-    {
-        for (int j = 0; j < assemblyLine.Count; j++)
-        {
-            Debug.Log(assemblyLine[j]);
-        }
-    }
+ 
 
     IEnumerator StartMovingPieces(Vector2 swipeDirection)
     {
         if (isMoving) yield break;
         isMoving = true;
+
+        Debug.Log("Started moving pieces");
 
         float moveDuration = 0.5f;
         float elapsedTime = 0f;
@@ -247,28 +256,6 @@ public class GearPart : MonoBehaviour
     }
 
 
-
-    private static void SetNewPositionLastElement(Bounds bounds, GameObject last)
-    {
-        
-       
-        Vector3 position = last.transform.position;
-
-        // Wrap X and Y axes
-        position.x = WrapAxis(position.x, bounds.min.x, bounds.max.x);
-        position.y = WrapAxis(position.y, bounds.min.y, bounds.max.y);
-
-        
-        last.transform.position = position;
-    }
-
-    private static float WrapAxis(float value, float min, float max)
-    {
-        if (value >= max) return min;
-        if (value <= min) return max;
-        return value;
-    }
-
     private void OnMouseDown()
     {
         if (!canReceiveInput) return; // Ignore input while moving
@@ -291,6 +278,7 @@ public class GearPart : MonoBehaviour
 
         if (swipeDistance < swipeThreshold)
         {
+            Debug.Log("Less swipe power, Rejected");
             return; // Treat this as a click, not a swipe
         }
 
@@ -308,4 +296,5 @@ public class GearPart : MonoBehaviour
         canReceiveInput = true;
     }
 
+   
 }

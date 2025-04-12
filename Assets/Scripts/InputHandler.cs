@@ -3,17 +3,11 @@ using UnityEngine.InputSystem;
 
 public class InputHandler : MonoBehaviour
 {
-   
-   [SerializeField] private float swipeThreshold = 0.5f; // Minimum distance for a swipe
-   public static InputHandler Instance { get; private set; }
-   private PlayerInputActions inputActions;
-   
-   public delegate void SwipeAction(Vector2 direction);
-   public event SwipeAction OnSwipe;
+    public static InputHandler Instance { get; private set; }
+    private PlayerInputActions inputActions;
 
-   public delegate void ClickAction(Vector2 position);
-   public event ClickAction OnClick;
-
+    [SerializeField] private float swipeThreshold = 0.5f; // Minimum distance for a swipe
+   
     private Vector2 firstTouchPosition;
     private Vector2 finalTouchPosition;
 
@@ -31,58 +25,37 @@ public class InputHandler : MonoBehaviour
 
         inputActions = new PlayerInputActions();
     }
-    private void OnMouseDown()
-    {
-        // Convert the mouse position to world coordinates
-        firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
-    }
 
-    private void OnMouseUp()
-    {
-        // Convert the final mouse position to world coordinates
-        finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        CalculateAngle();  
-    }
-
-    void CalculateAngle()
-    {
-        float swipeDistance = Vector2.Distance(finalTouchPosition, firstTouchPosition);
-
-        if (swipeDistance < swipeThreshold)
-        {
-            return; // Treat this as a click, not a swipe
-        }
-
-        // If the swipe distance is valid, calculate the swipe angle
-        float swipeAngle = Mathf.Atan2(finalTouchPosition.y - firstTouchPosition.y,
-                                        finalTouchPosition.x - firstTouchPosition.x) * 180 / Mathf.PI;
-
-        Debug.Log($"Swipe Angle: {swipeAngle}");
-
-        // Trigger the swipe event
-        OnSwipe?.Invoke(finalTouchPosition - firstTouchPosition);
-    }
-
- 
     private void OnEnable()
     {
-        inputActions.Enable();
+        inputActions.Gameplay.Enable();
+        inputActions.Gameplay.Swipe.performed += OnSwipe;
     }
-
     private void OnDisable()
     {
-        inputActions.Disable();
+        inputActions.Gameplay.Swipe.performed -= OnSwipe;
+        inputActions.Gameplay.Disable();
     }
 
-    private void HandleSwipe(InputAction.CallbackContext callbackContext)
+    private void OnSwipe(InputAction.CallbackContext obj)
     {
-        Vector2 swipeDelta = callbackContext.ReadValue<Vector2>();
-        OnSwipe?.Invoke(swipeDelta);
+        Debug.Log("Swipeddd");
+        Vector2 swipeDelta = obj.ReadValue<Vector2>();
+
+        if (swipeDelta.magnitude > swipeThreshold)
+        {
+            float angle = Mathf.Atan2(swipeDelta.y, swipeDelta.x) * Mathf.Rad2Deg;
+
+            if (angle > -45 && angle <= 45)
+                Debug.Log("Swipe Right");
+            else if (angle > 45 && angle <= 135)
+                Debug.Log("Swipe Up");
+            else if (angle > 135 || angle <= -135)
+                Debug.Log("Swipe Left");
+            else if (angle < -45 && angle >= -135)
+                Debug.Log("Swipe Down");
+        }
     }
 
-    private void HandleClick(InputAction.CallbackContext callbackContext)
-    {
-        Vector2 clickPosition = Mouse.current.position.ReadValue();
-        OnClick?.Invoke(clickPosition);
-    }
+  
 }

@@ -52,6 +52,9 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -102,7 +105,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -122,6 +125,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   boundary: {fileID: 6385416761981837544, guid: 3648b5bca3ae2284fb53d3bc8ad8eca4, type: 3}
+  swipeThreshold: 0.5
   column: 0
   row: 0
   swipeAngle: 0
